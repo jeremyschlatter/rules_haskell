@@ -1,12 +1,13 @@
 """Workspace rules (repositories)"""
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load(":private/versions.bzl", "check_version")
 
 def rules_haskell_dependencies():
-    """Provide all repositories that are necessary for `rules_haskell` to
-    function.
-    """
+    """Provide all repositories that are necessary for `rules_haskell` to function."""
     excludes = native.existing_rules().keys()
+    if "bazel_version" in dir(native):
+        check_version(native.bazel_version)
 
     if "platforms" not in excludes:
         http_archive(
@@ -19,9 +20,9 @@ def rules_haskell_dependencies():
     if "bazel_skylib" not in excludes:
         http_archive(
             name = "bazel_skylib",
-            sha256 = "eb5c57e4c12e68c0c20bc774bfbc60a568e800d025557bc4ea022c6479acc867",
-            strip_prefix = "bazel-skylib-0.6.0",
-            urls = ["https://github.com/bazelbuild/bazel-skylib/archive/0.6.0.tar.gz"],
+            sha256 = "e5d90f0ec952883d56747b7604e2a15ee36e288bb556c3d0ed33e818a4d971f2",
+            strip_prefix = "bazel-skylib-1.0.2",
+            urls = ["https://github.com/bazelbuild/bazel-skylib/archive/1.0.2.tar.gz"],
         )
 
     if "rules_cc" not in excludes:
@@ -43,17 +44,17 @@ def rules_haskell_dependencies():
     if "rules_sh" not in excludes:
         http_archive(
             name = "rules_sh",
-            sha256 = "8f2722359c0e13a258c341aac69b8faa96b21e8f3382bd375d78c52f8b5a3d34",
-            strip_prefix = "rules_sh-0.1.1",
-            urls = ["https://github.com/tweag/rules_sh/archive/v0.1.1.tar.gz"],
+            sha256 = "83a065ba6469135a35786eb741e17d50f360ca92ab2897857475ab17c0d29931",
+            strip_prefix = "rules_sh-0.2.0",
+            urls = ["https://github.com/tweag/rules_sh/archive/v0.2.0.tar.gz"],
         )
 
     if "io_tweag_rules_nixpkgs" not in excludes:
         http_archive(
             name = "io_tweag_rules_nixpkgs",
-            sha256 = "f5af641e16fcff5b24f1a9ba5d93cab5ad26500271df59ede344f1a56fc3b17d",
-            strip_prefix = "rules_nixpkgs-0.6.0",
-            urls = ["https://github.com/tweag/rules_nixpkgs/archive/v0.6.0.tar.gz"],
+            sha256 = "5c80f5ed7b399a857dd04aa81e66efcb012906b268ce607aaf491d8d71f456c8",
+            strip_prefix = "rules_nixpkgs-0.7.0",
+            urls = ["https://github.com/tweag/rules_nixpkgs/archive/v0.7.0.tar.gz"],
         )
 
     if "com_google_protobuf" not in excludes:
@@ -62,7 +63,6 @@ def rules_haskell_dependencies():
             sha256 = "e8c7601439dbd4489fe5069c33d374804990a56c2f710e00227ee5d8fd650e67",
             strip_prefix = "protobuf-3.11.2",
             urls = [
-                "https://mirror.bazel.build/github.com/google/protobuf/archive/v3.11.2.tar.gz",
                 "https://github.com/google/protobuf/archive/v3.11.2.tar.gz",
             ],
         )
@@ -88,5 +88,9 @@ def rules_haskell_dependencies():
         )
 
 def haskell_repositories():
-    """DEPRECATED alias for rules_haskell_dependencies"""
+    """Alias for rules_haskell_dependencies
+
+    Deprecated:
+      Use rules_haskell_dependencies instead.
+    """
     rules_haskell_dependencies()

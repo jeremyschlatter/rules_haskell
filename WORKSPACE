@@ -14,6 +14,10 @@ load("//haskell:repositories.bzl", "rules_haskell_dependencies")
 
 rules_haskell_dependencies()
 
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+
+bazel_skylib_workspace()
+
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 http_archive(
@@ -120,11 +124,6 @@ load(
     "nixpkgs_python_configure",
 )
 
-nixpkgs_package(
-    name = "ghc",
-    repository = "@nixpkgs_default",
-)
-
 http_archive(
     name = "rules_proto",
     sha256 = "73ebe9d15ba42401c785f9d0aeebccd73bd80bf6b8ac78f74996d31f2c0ad7a6",
@@ -176,7 +175,7 @@ load(
 )
 
 haskell_register_ghc_nixpkgs(
-    attribute_path = "ghc",
+    attribute_path = "haskell.compiler.ghc865",
     compiler_flags = test_compiler_flags,
     haddock_flags = test_haddock_flags,
     locale_archive = "@glibc_locales//:locale-archive",
@@ -207,11 +206,7 @@ nixpkgs_cc_configure(
     repository = "@nixpkgs_default",
 )
 
-nixpkgs_python_configure(
-    # XXX: Remove python2_attribute_path after updating to Stardoc 0.4.0
-    python2_attribute_path = "python2",
-    repository = "@nixpkgs_default",
-)
+nixpkgs_python_configure(repository = "@nixpkgs_default")
 
 nixpkgs_package(
     name = "nixpkgs_zlib",
@@ -237,13 +232,13 @@ cc_library(
 
 nixpkgs_package(
     name = "c2hs",
-    attribute_path = "haskellPackages.c2hs",
+    attribute_path = "haskell.packages.ghc865.c2hs",
     repository = "@nixpkgs_default",
 )
 
 nixpkgs_package(
     name = "doctest",
-    attribute_path = "haskellPackages.doctest",
+    attribute_path = "haskell.packages.ghc865.doctest",
     repository = "@nixpkgs_default",
 )
 
@@ -355,10 +350,11 @@ haskell_package_repository_dummy(
     name = "haskell_package_repository_dummy",
 )
 
-# For Skydoc
+# For Stardoc
 
 nixpkgs_package(
     name = "nixpkgs_nodejs",
+    build_file_content = 'exports_files(glob(["nixpkgs_nodejs/**"]))',
     # XXX Indirection derivation to make all of NodeJS rooted in
     # a single directory. We shouldn't need this, but it's
     # a workaround for
@@ -388,6 +384,12 @@ http_archive(
     ],
 )
 
+load("@build_bazel_rules_nodejs//:defs.bzl", "node_repositories")
+
+node_repositories(
+    vendored_node = "@nixpkgs_nodejs",
+)
+
 http_archive(
     name = "io_bazel_rules_sass",
     sha256 = "d5e0c0d16fb52f3dcce5bd7830d92d4813eb01bac0211119e74ec9e65eaf3b86",
@@ -406,26 +408,35 @@ load("@io_bazel_rules_sass//:defs.bzl", "sass_repositories")
 
 sass_repositories()
 
-load("@build_bazel_rules_nodejs//:defs.bzl", "node_repositories")
-
-node_repositories(
-    vendored_node = "@nixpkgs_nodejs",
-)
-
 http_archive(
-    name = "io_bazel_skydoc",
-    sha256 = "0f77e715e6cf683548a0af9ab84909e57a8f4609de1e847920444d0434259eb4",
-    # XXX: Update to 0.4.0 and Stardoc, the Skydoc API has been deprecated.
-    strip_prefix = "stardoc-0.3.0",
+    name = "io_bazel_stardoc",
+    sha256 = "6d07d18c15abb0f6d393adbd6075cd661a2219faab56a9517741f0fc755f6f3c",
+    strip_prefix = "stardoc-0.4.0",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/stardoc/archive/0.3.0.tar.gz",
-        "https://github.com/bazelbuild/stardoc/archive/0.3.0.tar.gz",
+        "https://mirror.bazel.build/github.com/bazelbuild/stardoc/archive/0.4.0.tar.gz",
+        "https://github.com/bazelbuild/stardoc/archive/0.4.0.tar.gz",
     ],
 )
 
-load("@io_bazel_skydoc//:setup.bzl", "skydoc_repositories")
+load("@io_bazel_stardoc//:setup.bzl", "stardoc_repositories")
 
-skydoc_repositories()
+stardoc_repositories()
+
+load(
+    "@rules_haskell//docs/pandoc:pandoc.bzl",
+    "import_pandoc_bindists",
+    "nixpkgs_pandoc_configure",
+)
+
+nixpkgs_pandoc_configure(repository = "@nixpkgs_default")
+
+import_pandoc_bindists()
+
+register_toolchains(
+    "@rules_haskell//docs/pandoc:nixpkgs",
+    "@rules_haskell//docs/pandoc:linux",
+    "@rules_haskell//docs/pandoc:macos",
+)
 
 # For buildifier
 
